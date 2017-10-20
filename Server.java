@@ -203,7 +203,7 @@ public class Server {
 					System.err.print("Windows command prompt: > java Server [number]"); // How to use.
 					return; // End program.
 				}
-			case 0; // No argument.
+			case 0: // No argument.
 				break; // Get out of switch statement.
 			default: // There was more than one argument.
 				System.out.println("Windows command prompt: > java Server [number]");
