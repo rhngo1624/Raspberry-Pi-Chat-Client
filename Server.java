@@ -6,6 +6,8 @@ import java.util.*; // for everything else; Date, etc.
 /**
 The server services multiple clients with client threads.
 The server recieves and broadcasts messages.
+
+Keep in mind that there is an inner class called ClientThread.
 **/
 public class Server {
 	
@@ -213,4 +215,136 @@ public class Server {
 		Server server = new Server(portNumber);
 		server.start();
 	}
+	
+	/**
+	Inner class.
+	There will be multiple of these running.
+	**/
+	class ClientThread extends Thread {
+		
+		Socket socket; // A connection point for the client and the server.
+		ObjectInputStream streamInput; // Stream to send messages.
+		ObjectOutputStream streamOutput; // Stream to recieve messages.
+		int id; // Every thread has its own id (no, now the one in psychology).
+		String username; // Every client has some alias.
+		ChatMessage cm; // What the message will be.
+		
+		/**
+		Makes a thread using information on a client's socket.
+		**/
+		ClientThread(Socket socket) {
+			id = ++uniqueID; // Set a unique ID based on the server's.
+			this.socket = socket;
+			
+			try { // Using the client's socket, set a thread's variables.
+				streamOutput = new ObjectOutputStream(socket.getOutputStream());
+				streamInput = new ObjectInputStream(socket.getInputStream());
+				username = (String)streamInput.readObject();
+				display(username + " just joined the chat room.  Welcome.");
+			} catch (IOException ex) {
+				display("There was a problem at a thread's stream creation.");
+				return; // Don't make the thread.
+			} catch (ClassNotFoundException ex) { // I was trying to read an object being sent.  It's probably nothing.
+				display("Class not found exception.");
+			}
+		}
+		
+		/**
+		Since this class extends Thread, and Thread implements Runnable, it must define a run() method.
+		The thread will be at a client's beck and call for as long as it possibly can.
+		**/
+		public void run() {
+			boolean loop = true; // Run forever.
+			
+			while (loop) {
+				
+				try {
+					cm = (ChatMessage)streamInput.readObject();
+				} catch (IOException ex) {
+					display(username + " has a stream problem: " + ex);
+					break;
+				} catch (ClassNotFoundException ex) {
+					display("Class not found exception.");
+					break;
+				}
+				
+				String message = cm.getMessage(); // Get client's message.
+				
+				broadcast(username + ": " + message); // Ask server to broadcast it.
+				
+				// This thread then runs again, waiting for more of the client's messages.
+			}
+			
+			// The client has disconnected.
+			remove(id); // Call on Server's remove method.
+			close(); // Close thread.
+		}
+		
+		/**
+		Close streams and socket.
+		We close them individually because one may already closed, but not the others.
+		If we try to close them all together and an exception occurs, they will revert and not be closed.
+		**/
+		private void close() {
+			try {
+				if (streamOutput != null) {
+					streamOutput.close();
+				}
+			} catch (Exception ex) {
+				// It was probably already closed.
+			}
+			
+			try {
+				if (streamInput != null) {
+					streamInput.close();
+				}
+			} catch (Exception ex) {
+				// It was probably already closed.
+			}
+			
+			try {
+				if (socket != null) {
+					socket.close();
+				}
+			} catch (Exception ex) {
+				// It was probably already closed.
+			}
+		}
+		
+		/**
+		Send message to client.
+		**/
+		private boolean writeMessage(String message) {
+			if (!socket.isConnected()) { // If client is not connected...
+				close(); // close thread.
+				return false; // Return false and have server remove user.
+			}
+			
+			try {
+				streamOutput.writeObject(message); // Send message to user.
+			} catch (IOException ex) {
+				display("There was a problem sending a message to " + username);
+				display(ex.toString()); // Alert the server that the message could not be sent.
+			}
+			
+			return true; // Don't remove user.
+		}
+	}
+	
+	/*
+	For future implementation:
+	
+	For client threads:
+	When a user logs out:
+		broadcast(username + " has left the chat room.");
+		loop = false;
+	
+	For the client:
+	GUI:
+	Users online:
+		for (int i = 0; i < clients.size(); ++i) {
+			ClientThread ct = clients.get(i);
+			System.out.println(ct.username);
+		}
+	*/
 }
