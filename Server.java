@@ -71,8 +71,8 @@ public class Server {
 					ClientThread ct = clients.get(i); // For every client thread servicing them...
 					
 					try { // close the thread's streams and socket.
-						ct.inputStream.close();
-						ct.outputStream.close();
+						ct.streamInput.close();
+						ct.streamOutput.close();
 						ct.socket.close();
 					} catch (IOException ex) {
 						System.err.print("There was a problem trying to close thread streams.");
@@ -93,7 +93,11 @@ public class Server {
 		String stamp = timestamp.format(new Date());
 		String timedMessage = stamp + ": " + message + "\n";
 		
-		// System.out.println(timedMessage); // Uncomment for more statements.
+		/*
+		Print the message on the server.
+		This doesn't seem to have a point, but I leave this uncommented for debugging.
+		*/
+		System.out.println(timedMessage); 
 		
 		// Iteration occurs in reverse order because clients may disconnect.
 		for (int i = clients.size(); --i >= 0; ) {
@@ -181,6 +185,8 @@ public class Server {
 		java Server
 		
 	The server should run.
+
+	To exit the server: ctrl + c
 	**/
 	public static void main(String[] args) {
 		
@@ -270,13 +276,21 @@ public class Server {
 				
 				String message = cm.getMessage(); // Get client's message.
 				
-				broadcast(username + ": " + message); // Ask server to broadcast it.
+				switch (cm.getType()) {
+					case ChatMessage.MESSAGE:
+						broadcast(username + ": " + message); // Ask server to broadcast it.
+						break;
+					case ChatMessage.LOGOUT:
+						broadcast(username + " has left the chat room.");
+						loop = false;
+						break;
+				}
 				
 				// This thread then runs again, waiting for more of the client's messages.
 			}
 			
 			// The client has disconnected.
-			remove(id); // Call on Server's remove method.
+			removeClient(id); // Call on Server's removeClient method.
 			close(); // Close thread.
 		}
 		
@@ -333,12 +347,7 @@ public class Server {
 	
 	/*
 	For future implementation:
-	
-	For client threads:
-	When a user logs out:
-		broadcast(username + " has left the chat room.");
-		loop = false;
-	
+
 	For the client:
 	GUI:
 	Users online:

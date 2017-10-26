@@ -138,7 +138,7 @@ public class Client {
 			case 2: // 2 arguments.
 				serverAddress = args[1];
 			case 1: // 1 argument.
-				userName = args[0];
+				username = args[0];
 			case 0: // No argument; settle for defaults.
 				break;
 			default: // More than 2 arguments.
@@ -159,7 +159,18 @@ public class Client {
 		while (true) {
 			System.out.print("> "); // Just a little indicator to enter a message.
 			String message = scanner.nextLine(); // Get input.
-			client.sendMessage(new ChatMessage(ChatMessage.MESSAGE), message); // Send message.
+			
+			/*
+			We won't actually be having the user enter 'logout' to log out,
+			but this loop has to end in some way in order to disconnect.
+			For now, we'll keep this.
+			*/
+			if (message.equalsIgnoreCase("LOGOUT")) {
+				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+				break; // Break out of while loop.
+			} else {
+				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, message)); // Send message.
+			}
 		}
 		
 		client.disconnect(); // You get here when the loop is broken (break;).
