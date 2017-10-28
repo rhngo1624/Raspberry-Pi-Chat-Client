@@ -2,7 +2,12 @@ import java.io.*; // for input-output
 import java.net.*; // for TCP and sockets
 import java.text.SimpleDateFormat; // for the timestamps
 import java.util.*; // for everything else; Date, etc.
-	
+
+/*
+Change log:
+10 / 26 : Testing comment history.  Variables, initialize, methods.
+*/
+
 /**
 The server services multiple clients with client threads.
 The server recieves and broadcasts messages.
@@ -13,6 +18,7 @@ public class Server {
 	
 	private static int uniqueID; // Each connection will have a unique ID.
 	private ArrayList<ClientThread> clients; // A list of client threads.
+	private ArrayList<String> comments; // Currently testing, don't worry about this.
 	private SimpleDateFormat timestamp; // The timestamp of a message.
 	private int port; // The port number for connections.
 	private boolean loop; // The server should be on a loop and keep on listening for clients.
@@ -24,8 +30,36 @@ public class Server {
 		this.port = port;
 		timestamp = new SimpleDateFormat("HH:mm:ss");
 		clients = new ArrayList<ClientThread>();
+		comments = new ArrayList<String>();
 	}
-	
+
+	/**
+	Testing class, don't worry about this.
+
+	The idea here is that the server remembers a number of comments.
+	Let's say about 10 for now.
+	If a client enters the chat room, the client outta see what has been said before, ja?
+	**/
+	public void addToHistory(String comment) {
+		if (comments.size() >= 10) {
+			comments.remove(0);
+		}
+
+		comments.add(comment);
+	}
+
+	/**
+	Testing class, don't worry about this.
+
+	The idea here is that if a client connects, they should see the last number of comments
+	the server has received.
+	**/
+	public void listCommentHistory() {
+		for (int i = 0; i < comments.size(); i++) {
+			System.out.println(comments.get(i)); // Change this later.
+		}
+	}	
+
 	/**
 	The server will show what is happening to it through statements.
 	These statements are meant to keep track on what is going on in the server.
@@ -351,6 +385,9 @@ public class Server {
 	For the client:
 	GUI:
 	Users online:
+
+	invoke a function whenever someone logs in or out.
+	use repaint() to change w/e panel this is on. 
 		for (int i = 0; i < clients.size(); ++i) {
 			ClientThread ct = clients.get(i);
 			System.out.println(ct.username);

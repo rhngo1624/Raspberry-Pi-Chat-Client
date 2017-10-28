@@ -2,6 +2,12 @@ import java.net.*; // For networking; TCP and sockets
 import java.io.*; // For streams.
 import java.util.*; // For Scanner.
 
+/*
+Change log:
+10 / 26 : Added a prompt for user for chat room alias under Inner class main().
+10 / 28 : Some exception messages commented out; added new system messages.
+*/
+
 /**
 This class runs on a client's computer.
 **/
@@ -140,6 +146,17 @@ public class Client {
 			case 1: // 1 argument.
 				username = args[0];
 			case 0: // No argument; settle for defaults.
+				Scanner scanner = new Scanner(System.in);
+
+				System.out.println("What would you like to be known as in the chat room?");
+				String user = scanner.nextLine();
+
+				if (user.equals("")) {
+					 
+				} else {
+					username = user;
+				}				
+
 				break;
 			default: // More than 2 arguments.
 				System.out.println("Windows command prompt: > java Client [username] [IP address]");
@@ -190,7 +207,8 @@ public class Client {
 					System.out.println(message); // Print message.
 					System.out.print("> "); // New indicator.
 				} catch (IOException ex) {
-					display("The server has closed the connection: " + ex);
+					// display("The server has closed the connection: " + ex); // For debugging
+					display("You have been disconnected from the server."); // Logging out.
 					break; // Break from while loop.
 				} catch (ClassNotFoundException ex) {
 					// It's probably nothing.
