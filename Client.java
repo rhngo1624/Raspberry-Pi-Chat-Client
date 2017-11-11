@@ -6,6 +6,7 @@ import java.util.*; // For Scanner.
 Change log:
 10 / 26 : Added a prompt for user for chat room alias under Inner class main().
 10 / 28 : Some exception messages commented out; added new system messages.
+11 / 10 : Added a message that lists those online.
 */
 
 /**
@@ -96,12 +97,12 @@ public class Client {
 	**/
 	private void disconnect() {
 		try {
-				if (streamOutput != null) {
-					streamOutput.close();
-				}
-			} catch (Exception ex) {
-				// It was probably already closed.
+			if (streamOutput != null) {
+				streamOutput.close();
 			}
+		} catch (Exception ex) {
+			// It was probably already closed.
+		}
 			
 		try {
 			if (streamInput != null) {
@@ -185,6 +186,8 @@ public class Client {
 			if (message.equalsIgnoreCase("LOGOUT")) {
 				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
 				break; // Break out of while loop.
+			} else if (message.equalsIgnoreCase("ONLINE")) {
+				client.sendMessage(new ChatMessage(ChatMessage.ONLINE, ""));
 			} else {
 				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, message)); // Send message.
 			}

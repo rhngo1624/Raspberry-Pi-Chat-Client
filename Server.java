@@ -6,6 +6,8 @@ import java.util.*; // for everything else; Date, etc.
 /*
 Change log:
 10 / 26 : Testing comment history.  Variables, initialize, methods.
+11 / 10 : The server now gives a list of who is online; they have to ask for it, though.
+		: Working on comment history.
 */
 
 /**
@@ -34,13 +36,14 @@ public class Server {
 	}
 
 	/**
-	Testing class, don't worry about this.
-
 	The idea here is that the server remembers a number of comments.
 	Let's say about 10 for now.
 	If a client enters the chat room, the client outta see what has been said before, ja?
+	
+	Keep in mind that the comments history will be deleted if the server restarts.
 	**/
 	public void addToHistory(String comment) {
+		// In the event there are more than 10 comments, follow the FIFO rule and remove a comment.
 		if (comments.size() >= 10) {
 			comments.remove(0);
 		}
@@ -54,10 +57,15 @@ public class Server {
 	The idea here is that if a client connects, they should see the last number of comments
 	the server has received.
 	**/
-	public void listCommentHistory() {
+	public String listCommentHistory() {
+		String history = "";
+		
 		for (int i = 0; i < comments.size(); i++) {
-			System.out.println(comments.get(i)); // Change this later.
+			// System.out.println(comments.get(i)); // Change this later.
+			history = history + comments.get(i) + "\n";
 		}
+		
+		return history;
 	}	
 
 	/**
@@ -280,7 +288,11 @@ public class Server {
 				streamOutput = new ObjectOutputStream(socket.getOutputStream());
 				streamInput = new ObjectInputStream(socket.getInputStream());
 				username = (String)streamInput.readObject();
-				display(username + " just joined the chat room.  Welcome.");
+				// display(username + " just joined the chat room.  Welcome.");
+				String notice = username + " just joined the chat room.  Welcome.";
+				writeMessage(listCommentHistory()); // New code
+				broadcast(notice); // New code
+				addToHistory(notice); // New code
 			} catch (IOException ex) {
 				display("There was a problem at a thread's stream creation.");
 				return; // Don't make the thread.
@@ -312,11 +324,24 @@ public class Server {
 				
 				switch (cm.getType()) {
 					case ChatMessage.MESSAGE:
-						broadcast(username + ": " + message); // Ask server to broadcast it.
+						String comment = username + ": " + message;
+						addToHistory(comment);
+						broadcast(comment); // Ask server to broadcast it.
 						break;
 					case ChatMessage.LOGOUT:
-						broadcast(username + " has left the chat room.");
+						String notice = username + " has left the chat room.";
+						addToHistory(notice);
+						broadcast(notice);
 						loop = false;
+						break;
+					case ChatMessage.ONLINE:
+						writeMessage("Online:");
+						
+						for (int i = 0; i < clients.size(); ++i) {
+							ClientThread ct = clients.get(i);
+							writeMessage(ct.username);
+						}
+						
 						break;
 				}
 				
@@ -378,19 +403,4 @@ public class Server {
 			return true; // Don't remove user.
 		}
 	}
-	
-	/*
-	For future implementation:
-
-	For the client:
-	GUI:
-	Users online:
-
-	invoke a function whenever someone logs in or out.
-	use repaint() to change w/e panel this is on. 
-		for (int i = 0; i < clients.size(); ++i) {
-			ClientThread ct = clients.get(i);
-			System.out.println(ct.username);
-		}
-	*/
 }

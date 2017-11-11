@@ -1,5 +1,10 @@
 import java.io.*;
 
+/*
+Change log:
+11 / 10 : Added a new message type.
+*/
+
 /**
 My understanding of the Serializable interface is that
 classes that implement it are labeled serializable.
@@ -17,6 +22,7 @@ public class ChatMessage implements Serializable {
 	
 	static final int MESSAGE = 0; // The message is a plain old message.
 	static final int LOGOUT = 1; // The message is a request to log out.
+	static final int ONLINE = 2; // The message is a request to list users online.
 	private int type; // The type are the above variables using numbers.
 	private String message; // The message itself.
 	
