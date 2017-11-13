@@ -1,0 +1,24 @@
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Date;
+
+import javax.swing.JLabel;
+import javax.swing.Timer;
+/* Based on code from:
+ * http://www.java2s.com/Code/Java/
+ * Swing-JFC/Timerclocklabel.htm
+ */
+// Used to represent time
+
+public class ClockLab extends JLabel implements ActionListener {
+
+	public ClockLab(){
+		Timer clock = new Timer(1000,this);
+		clock.start();
+	}
+	public void actionPerformed(ActionEvent e) {
+		
+		setText((new Date()).toString());
+	}
+
+}
