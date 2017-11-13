@@ -1,0 +1,206 @@
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.border.Border;
+
+// Handles GUI for program
+
+public class BrowserMenu extends JPanel implements ActionListener {
+	private static final int l = 10;
+	private static final Color BACK_COLOR = Color.CYAN;
+	public static JFrame browser;
+	JPanel MessagerMenu;
+	private JPanel friendList;
+	private JPanel messageElements;
+	private JPanel accountElements;
+	
+	private JTextField enterMessage;
+	private JLabel accountName;
+	private JScrollPane chatField;
+	private JTextArea TextChat;
+	public static ClockLab clocker;
+	private JButton Submit;
+	private JButton LogOut;
+	
+
+	public BrowserMenu() {
+		createChatServerElements();
+		// Sets browser to be transparent
+		
+		browser.setResizable(false);
+		browser.setUndecorated(true);
+		browser.setSize(800, 800);
+		browser.getContentPane().setBackground(Color.CYAN);
+
+		browser.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		
+		MessagerMenu.setPreferredSize(new Dimension(800, 800));
+		compBorderLines();
+		/*
+		GridBagConstraints constraints = chatLogSetUp();
+		MessagerMenu.add(chatField, constraints);
+		constraints = commentFieldSetUp();
+		messageElements.add(enterMessage);
+		messageElements.add(Submit);
+		MessagerMenu.add(messageElements,constraints);
+		constraints = setupUserInformation();
+		accountElements.add(accountName);
+		accountElements.add(clocker);
+		accountElements.add(LogOut);
+		MessagerMenu.add(accountElements, constraints);
+		constraints = setupFriendList();
+		
+		MessagerMenu.add(friendList,constraints);
+		*/
+		 createRow0Constr();
+		 createRow1Constr();
+		 createRow2Constr();
+		
+		MessagerMenu.setOpaque(false);
+
+		browser.getContentPane().add(MessagerMenu);
+		browser.pack();
+		browser.setVisible(true);
+	}
+	public static void main(String args[]){
+			BrowserMenu rasp = new BrowserMenu();
+	}
+
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		g.setColor(new Color(0,0,0,0));
+		g.fillRect(0, 0, 800, 800);
+	}
+	public void createChatServerElements(){
+		browser = new JFrame("Chat Server");
+		MessagerMenu = new JPanel(new GridBagLayout());
+		friendList = new JPanel();
+		enterMessage = new JTextField(l);
+		Submit = new JButton("Submit");
+		LogOut = new JButton("LogOut");
+		TextChat = new JTextArea("this",100,100);
+		chatField = new JScrollPane(TextChat);
+		clocker = new ClockLab();
+		accountName = new JLabel("SmexyCat");
+	}
+	public void createRow0Constr(){
+		GridBagConstraints a = new GridBagConstraints();
+		a.anchor = GridBagConstraints.FIRST_LINE_START;
+		a.gridwidth = 3;
+		a.ipadx = 400;
+		a.ipady = 400;
+		a.gridx = 0;
+		a.gridy = 0;
+		a.insets = new Insets(0,5,10,5);
+		MessagerMenu.add(chatField,a);
+		a = new GridBagConstraints();
+		a.anchor = GridBagConstraints.PAGE_START;
+		a.ipadx = 125;
+		a.ipady = 400;
+		a.gridx = 3;
+		a.insets = new Insets(0,5,10,5);
+		MessagerMenu.add(friendList, a);
+	}
+	public void createRow1Constr(){
+		GridBagConstraints b = new GridBagConstraints();
+		b.anchor = GridBagConstraints.LINE_START;
+		b.ipadx = 200;
+		b.ipady = 30;
+		b.gridx = 1;
+		b.gridy = 1;
+		b.insets= new Insets(10,10,10,10);
+		MessagerMenu.add(enterMessage,b);
+		b = new GridBagConstraints();
+		b.anchor = GridBagConstraints.CENTER;
+		b.ipadx = 65;
+		b.ipady = 30;
+		b.gridy = 1;
+		b.gridx = 2;
+		b.insets = new Insets(10,10,10,10);
+		MessagerMenu.add(Submit,b);
+	}
+	public void createRow2Constr(){
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.LINE_START;
+		c.ipadx = 50;
+		c.ipady = 30;
+		c.gridx = 0;
+		c.gridy = 2;
+		c.insets= new Insets(10,10,10,10);
+		MessagerMenu.add(accountName,c);
+		c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.CENTER;
+		c.ipadx = 100;
+		c.ipady = 30;
+		c.gridy = 2;
+		c.gridx = 1;
+		MessagerMenu.add(clocker, c);
+		c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.LINE_END;
+		c.gridy = 2;
+		c.gridx = 3;
+		c.insets = new Insets(10,10,10,10);
+		MessagerMenu.add(LogOut, c);
+	}
+	public void compBorderLines(){
+		Border outline = BorderFactory
+				.createLineBorder(Color.BLACK);
+		chatField.setBorder(outline);
+	}
+
+	public GridBagConstraints chatLogSetUp() {
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.ipadx = 300;
+		c.ipady = 300;
+		c.gridx = 0;
+		c.gridy = 0;
+		return c;
+	}
+	public GridBagConstraints commentFieldSetUp(){
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 1;
+		return c;
+	}
+
+	public GridBagConstraints setupUserInformation() {
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 2;
+		return c;
+	}
+	public GridBagConstraints setupFriendList(){
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 1;
+		c.gridy = 0;
+		return c;
+	}
+
+	public JTextField getEnterMessage() {
+		return enterMessage;
+	}
+
+	public void setEnterMessage(JTextField enterMessage) {
+		this.enterMessage = enterMessage;
+	}
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+}
