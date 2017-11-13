@@ -8,6 +8,8 @@ Change log:
 10 / 26 : Testing comment history.  Variables, initialize, methods.
 11 / 10 : The server now gives a list of who is online; they have to ask for it, though.
 		: Working on comment history.
+11 / 12 : Completed comment history.
+		: Added info about timestamps.
 */
 
 /**
@@ -30,6 +32,15 @@ public class Server {
 	**/
 	public Server(int port) {
 		this.port = port;
+		
+		/*
+		SimpleDateFormat in particular is a curious case.
+		
+		If I entered as a String: "EEE, MMM d, ''yy"
+		my timestamps will look like: Sun, Nov 12, '17	.
+		
+		You can find out more Strings to play with by searching SimpleDateFormat on javadocs.
+		*/
 		timestamp = new SimpleDateFormat("HH:mm:ss");
 		clients = new ArrayList<ClientThread>();
 		comments = new ArrayList<String>();
@@ -43,7 +54,10 @@ public class Server {
 	Keep in mind that the comments history will be deleted if the server restarts.
 	**/
 	public void addToHistory(String comment) {
-		// In the event there are more than 10 comments, follow the FIFO rule and remove a comment.
+		/*
+		In the event there are more than 10 comments, follow the FIFO rule and remove a comment.
+		The nice thing about ArrayLists is that they are dynamic.  Thank whoever made them.
+		*/
 		if (comments.size() >= 10) {
 			comments.remove(0);
 		}
@@ -58,10 +72,13 @@ public class Server {
 	the server has received.
 	**/
 	public String listCommentHistory() {
-		String history = "";
+		String history = "10 most previous comments:\n";
+		
+		if (comments.size() == 0) {
+			return "";
+		}
 		
 		for (int i = 0; i < comments.size(); i++) {
-			// System.out.println(comments.get(i)); // Change this later.
 			history = history + comments.get(i) + "\n";
 		}
 		
@@ -139,7 +156,8 @@ public class Server {
 		Print the message on the server.
 		This doesn't seem to have a point, but I leave this uncommented for debugging.
 		*/
-		System.out.println(timedMessage); 
+		System.out.println(timedMessage);
+		addToHistory(timedMessage); // Add this timed message to comment history.
 		
 		// Iteration occurs in reverse order because clients may disconnect.
 		for (int i = clients.size(); --i >= 0; ) {
@@ -288,11 +306,12 @@ public class Server {
 				streamOutput = new ObjectOutputStream(socket.getOutputStream());
 				streamInput = new ObjectInputStream(socket.getInputStream());
 				username = (String)streamInput.readObject();
-				// display(username + " just joined the chat room.  Welcome.");
+				
 				String notice = username + " just joined the chat room.  Welcome.";
-				writeMessage(listCommentHistory()); // New code
-				broadcast(notice); // New code
-				addToHistory(notice); // New code
+				// Upon entering the chat room, user should see previous comments.
+				writeMessage(listCommentHistory());
+				writeMessage(notice); // Testing; ignore.
+				broadcast(notice); // Tell everyone someone new came in.
 			} catch (IOException ex) {
 				display("There was a problem at a thread's stream creation.");
 				return; // Don't make the thread.
@@ -325,12 +344,10 @@ public class Server {
 				switch (cm.getType()) {
 					case ChatMessage.MESSAGE:
 						String comment = username + ": " + message;
-						addToHistory(comment);
 						broadcast(comment); // Ask server to broadcast it.
 						break;
 					case ChatMessage.LOGOUT:
 						String notice = username + " has left the chat room.";
-						addToHistory(notice);
 						broadcast(notice);
 						loop = false;
 						break;
