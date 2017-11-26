@@ -7,6 +7,10 @@ Change log:
 10 / 26 : Added a prompt for user for chat room alias under Inner class main().
 10 / 28 : Some exception messages commented out; added new system messages.
 11 / 10 : Added a message that lists those online.
+11 / 15 : Username length set to 14.  Usernames can no longer be whitespace.
+	: Message length set to 280.  Messages can no longer be whitespace.
+11 / 17 : Client interface linkage started.
+11 / 19 : Interface link success.
 */
 
 /**
@@ -15,26 +19,47 @@ This class runs on a client's computer.
 public class Client {
 	
 	private String username; // User's alias.
-	private String server; // Server name.
+	private String server; // Server IP address.
 	private int port; // Server port.
 	private ObjectInputStream streamInput; // For inputs.
 	private ObjectOutputStream streamOutput; // For outputs.
 	private Socket socket; // Connection point of the client.
+	private ClientInterface ci; // Interface object; link Client with this.
+
+	/*
+	Per the standard of a certain blue chat networking site.
+	Oh, wait, they're all blue.  HA.
+	*/
+	private static final int MESSAGE_LIMIT = 280;
+	private static final int USERNAME_LIMIT = 14;
 	
 	/**
 	Sets some variables.
+	For command console use.
 	**/
 	public Client(String server, int port, String username) {
+		this(server, port, username, null);
+	}
+	
+	/**
+	For GUI use.
+	**/
+	public Client(String server, int port, String username, ClientInterface ci) {
 		this.server = server;
 		this.port = port;
 		this.username = username;
+		this.ci = ci;
 	}
 	
 	/**
 	Displays a statement.
 	**/
 	private void display(String message) {
-		System.out.println(message);
+		if (ci != null) { // Using GUI.
+			ci.printMessage(message + "\n");
+		} else { // Using command console.
+			System.out.println(message);
+		}
 	}
 	
 	/**
@@ -119,6 +144,10 @@ public class Client {
 		} catch (Exception ex) {
 			// It was probably already closed.
 		}
+		
+		if (ci != null) {
+			ci.connectionFailed();
+		}
 	}
 	
 	/**
@@ -134,29 +163,34 @@ public class Client {
 	public static void main(String[] args) {
 		
 		int portNumber = 2000; // Default port.
-		String serverAddress = "127.0.0.1"; // Default IP Address.
-		String username = "SomeUser"; // Default alias.
+		String serverAddress = "127.0.0.1"; // Default IP Address for testing.
+		// String serverAddress = "172.28.76.1"; // Where the server actually is.
+		String username = "Anon"; // Default alias.
 		
 		/*
 		This block is meant for command prompts.
-		We won't be using command prompts, but we may need to do some testing.
+		We won't be using command prompts, but we need it to do some testing.
 		*/
 		switch (args.length) {
 			case 2: // 2 arguments.
 				serverAddress = args[1];
 			case 1: // 1 argument.
 				username = args[0];
-			case 0: // No argument; settle for defaults.
+				break;
+			case 0: // No argument; prompt.
 				Scanner scanner = new Scanner(System.in);
 
 				System.out.println("What would you like to be known as in the chat room?");
 				String user = scanner.nextLine();
+				
+				while (user.length() > USERNAME_LIMIT || user.trim().equals("")) {
+					String alert = "Usernames can be up to " + USERNAME_LIMIT + " characters long and must not be empty." +
+										"  Please try again:";
+					System.out.println(alert);
+					user = scanner.nextLine();
+				}
 
-				if (user.equals("")) {
-					 
-				} else {
-					username = user;
-				}				
+				username = user;			
 
 				break;
 			default: // More than 2 arguments.
@@ -178,12 +212,19 @@ public class Client {
 			System.out.print("> "); // Just a little indicator to enter a message.
 			String message = scanner.nextLine(); // Get input.
 			
+			if (message.length() > MESSAGE_LIMIT || message.trim().equals("")) {
+				// Alert that the message is either too long or empty.
+				message = "Messages can be up to " + MESSAGE_LIMIT + " characters long" +
+							" and cannot be empty.";
+				System.out.println(message);
+			}
+
 			/*
 			We won't actually be having the user enter 'logout' to log out,
 			but this loop has to end in some way in order to disconnect.
 			For now, we'll keep this.
 			*/
-			if (message.equalsIgnoreCase("LOGOUT")) {
+			else if (message.equalsIgnoreCase("LOGOUT")) {
 				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
 				break; // Break out of while loop.
 			} else if (message.equalsIgnoreCase("ONLINE")) {
@@ -207,11 +248,23 @@ public class Client {
 				try {
 					String message = (String)streamInput.readObject(); // Take message from server.
 					
-					System.out.println(message); // Print message.
-					System.out.print("> "); // New indicator.
+					if (message.substring(0, 7).equals("!updOn:") && ci != null) {
+						String list = message.substring(7, message.length());
+						ci.updateOnlineList(list);
+					} else if (ci != null) {
+						ci.printMessage(message);
+					} else {
+						System.out.println(message); // Print message.
+						System.out.print("> "); // New indicator.
+					}
 				} catch (IOException ex) {
 					// display("The server has closed the connection: " + ex); // For debugging
 					display("You have been disconnected from the server."); // Logging out.
+					
+					if (ci != null) {
+						ci.connectionFailed();
+					}
+					
 					break; // Break from while loop.
 				} catch (ClassNotFoundException ex) {
 					// It's probably nothing.

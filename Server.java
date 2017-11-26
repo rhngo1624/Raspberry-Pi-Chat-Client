@@ -10,6 +10,9 @@ Change log:
 		: Working on comment history.
 11 / 12 : Completed comment history.
 		: Added info about timestamps.
+11 / 14 : Edited comment history.
+11 / 16 : Added online list broadcasting.
+11 / 18 : Edited online list broadcasting.
 */
 
 /**
@@ -22,7 +25,7 @@ public class Server {
 	
 	private static int uniqueID; // Each connection will have a unique ID.
 	private ArrayList<ClientThread> clients; // A list of client threads.
-	private ArrayList<String> comments; // Currently testing, don't worry about this.
+	private ArrayList<String> comments; // A list of comments.
 	private SimpleDateFormat timestamp; // The timestamp of a message.
 	private int port; // The port number for connections.
 	private boolean loop; // The server should be on a loop and keep on listening for clients.
@@ -48,17 +51,17 @@ public class Server {
 
 	/**
 	The idea here is that the server remembers a number of comments.
-	Let's say about 10 for now.
+	
 	If a client enters the chat room, the client outta see what has been said before, ja?
 	
 	Keep in mind that the comments history will be deleted if the server restarts.
 	**/
 	public void addToHistory(String comment) {
 		/*
-		In the event there are more than 10 comments, follow the FIFO rule and remove a comment.
+		In the event there are more than 50 comments, follow the FIFO rule and remove a comment.
 		The nice thing about ArrayLists is that they are dynamic.  Thank whoever made them.
 		*/
-		if (comments.size() >= 10) {
+		if (comments.size() >= 50) {
 			comments.remove(0);
 		}
 
@@ -66,25 +69,39 @@ public class Server {
 	}
 
 	/**
-	Testing class, don't worry about this.
-
 	The idea here is that if a client connects, they should see the last number of comments
 	the server has received.
 	**/
 	public String listCommentHistory() {
-		String history = "10 most previous comments:\n";
-		
 		if (comments.size() == 0) {
-			return "";
+			return "You're the first to enter the chat room.  The winner is you!\n";
 		}
+		
+		String history = "50 most previous comments and notices:\n";
 		
 		for (int i = 0; i < comments.size(); i++) {
-			history = history + comments.get(i) + "\n";
+			history = history + comments.get(i);
 		}
+		
+		history = history + "---\n";
 		
 		return history;
 	}	
 
+	/**
+	For GUI.  Send information to update online list.
+	**/
+	private String listOnline() {
+		String online = "!updOn:";
+		
+		for (int i = 0; i < clients.size(); i++) {
+			ClientThread ct = clients.get(i);
+			online = online + ct.username + "\n";
+		}
+		
+		return online;
+	}
+	
 	/**
 	The server will show what is happening to it through statements.
 	These statements are meant to keep track on what is going on in the server.
@@ -150,17 +167,23 @@ public class Server {
 	**/
 	private synchronized void broadcast(String message) {
 		String stamp = timestamp.format(new Date());
-		String timedMessage = stamp + ": " + message + "\n";
+		String timedMessage;
 		
-		/*
-		Print the message on the server.
-		This doesn't seem to have a point, but I leave this uncommented for debugging.
-		*/
-		System.out.println(timedMessage);
-		addToHistory(timedMessage); // Add this timed message to comment history.
+		if (message.substring(0, 7).equals("!updOn:")) {
+			timedMessage = message;
+		} else {
+			timedMessage = stamp + ": " + message + "\n";
+			
+			/*
+			Print the message on the server.
+			This doesn't seem to have a point, but I leave this uncommented for debugging.
+			*/
+			System.out.println(timedMessage);
+			addToHistory(timedMessage); // Add this timed message to comment history.
+		}
 		
 		// Iteration occurs in reverse order because clients may disconnect.
-		for (int i = clients.size(); --i >= 0; ) {
+		for (int i = clients.size() - 1; i >= 0; i--) {
 			ClientThread ct = clients.get(i);
 			
 			if (!ct.writeMessage(timedMessage)) { // Have a thread send a broadcasted message.
@@ -291,7 +314,7 @@ public class Server {
 		Socket socket; // A connection point for the client and the server.
 		ObjectInputStream streamInput; // Stream to send messages.
 		ObjectOutputStream streamOutput; // Stream to recieve messages.
-		int id; // Every thread has its own id (no, now the one in psychology).
+		int id; // Every thread has its own id (no, not the one in psychology).
 		String username; // Every client has some alias.
 		ChatMessage cm; // What the message will be.
 		
@@ -310,8 +333,10 @@ public class Server {
 				String notice = username + " just joined the chat room.  Welcome.";
 				// Upon entering the chat room, user should see previous comments.
 				writeMessage(listCommentHistory());
-				writeMessage(notice); // Testing; ignore.
+				writeMessage(notice + "\n"); // Testing; ignore.
+				writeMessage(listOnline()); // Testing; ignore.
 				broadcast(notice); // Tell everyone someone new came in.
+				broadcast(listOnline()); // For GUI.
 			} catch (IOException ex) {
 				display("There was a problem at a thread's stream creation.");
 				return; // Don't make the thread.
@@ -333,6 +358,8 @@ public class Server {
 					cm = (ChatMessage)streamInput.readObject();
 				} catch (IOException ex) {
 					display(username + " has a stream problem: " + ex);
+					broadcast(username + " has left the chat room.");
+					broadcast(listOnline());
 					break;
 				} catch (ClassNotFoundException ex) {
 					display("Class not found exception.");
@@ -349,6 +376,7 @@ public class Server {
 					case ChatMessage.LOGOUT:
 						String notice = username + " has left the chat room.";
 						broadcast(notice);
+						broadcast(listOnline()); // For GUI.
 						loop = false;
 						break;
 					case ChatMessage.ONLINE:

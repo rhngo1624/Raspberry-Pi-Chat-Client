@@ -7,8 +7,8 @@ Change log:
 
 /**
 My understanding of the Serializable interface is that
-classes that implement it are labeled serializable.
-Objects of this class have information that will be serialized into a stream of bytes.
+classes that implement it are labeled serializable;
+objects of this class have information that will be serialized into a stream of bytes.
 These streams can be sent and deserialized by others so that the object is recreated
 on their computers.
 **/
@@ -35,19 +35,19 @@ public class ChatMessage implements Serializable {
 		this.message = message;
 	}
 	
-	int getType() {
+	public int getType() {
 		return type;
 	}
 	
-	void setType(int i) {
+	public void setType(int i) {
 		type = i;
 	}
 	
-	String getMessage() {
+	public String getMessage() {
 		return message;
 	}
 	
-	void setMessage(String message) {
+	public void setMessage(String message) {
 		this.message = message;
 	}
 }
